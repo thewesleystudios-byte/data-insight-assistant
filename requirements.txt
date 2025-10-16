@@ -10,6 +10,7 @@ tzdata==2025.2
 
 # Visualization
 matplotlib==3.7.2
+seaborn==0.12.3
 altair==5.5.0
 
 # Excel support
