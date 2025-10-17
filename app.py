@@ -112,23 +112,11 @@ def create_pdf_report(title, ai_summary, chart_image_path=None, out_path="report
     return out_path
 
 # ---------------------------
-# AUTHENTICATION (simple)
+# AUTHENTICATION (removed)
 # ---------------------------
-if "logged_in" not in st.session_state:
-    st.session_state["logged_in"] = False
-
-if not st.session_state["logged_in"]:
-    st.title("🔒 Data Insight Assistant — Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        if password == APP_PASSWORD:
-            st.session_state["logged_in"] = True
-            st.success("Logged in successfully")
-            st.rerun()
-        else:
-            st.error("Incorrect password")
-    st.stop()
+# Login removed so the app loads immediately
+st.markdown("## 📊 Data Insight Assistant")
+st.caption("Note: authentication removed for demo. Contact me if you need a secured demo.")
 
 # ---------------------------
 # OPENAI CLIENT (if available)
