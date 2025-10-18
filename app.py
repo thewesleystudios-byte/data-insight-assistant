@@ -860,17 +860,7 @@ with tab_viz:
             fig = create_plotly_chart(df, plotly_x, plotly_y, plotly_chart_type)
             if fig:
                 st.plotly_chart(fig, use_container_width=True)
-# ---------------------------
-# NEW TAB: PyGWalker
-# ---------------------------
-with tab_pyg:
-    st.header("🧩 PyGWalker - Drag & Drop Analysis")
-    
-    if "df" not in st.session_state:
-        st.warning("Upload data in the Upload & Clean tab first.")
-    else:
-        df = st.session_state["df"]
-        create_pygwalker_interface(df)
+
 # ---------------------------
 # TAB 5: FORECAST
 # ---------------------------
