@@ -19,6 +19,18 @@ from openai import OpenAI
 from fpdf import FPDF
 
 # ---------------------------
+# ENHANCED UI & VISUALIZATION IMPORTS
+# ---------------------------
+import plotly.express as px
+import plotly.graph_objects as go
+from bokeh.plotting import figure
+from bokeh.models import HoverTool
+import pygwalker as pyg
+from streamlit_option_menu import option_menu
+from streamlit_extras.metric_cards import style_metric_cards
+from PIL import Image
+
+# ---------------------------
 # STATISTICAL IMPORTS
 # ---------------------------
 from scipy import stats
@@ -43,6 +55,88 @@ USER_ROLES = {
     "professor": ["view", "analyze", "export", "share", "manage_users", "create_assignments"],
     "admin": ["all"]
 }
+
+# ---------------------------
+# ENHANCED UI COMPONENTS
+# ---------------------------
+def setup_enhanced_ui():
+    """Initialize enhanced UI components"""
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+    .main-header {
+        font-size: 2.5rem;
+        color: #1f77b4;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        color: white;
+    }
+    .feature-card {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 4px solid #1f77b4;
+        margin: 1rem 0;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+def create_metric_cards(df):
+    """Create beautiful metric cards for dataset overview"""
+    if df is not None:
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Rows", f"{df.shape[0]:,}")
+        with col2:
+            st.metric("Columns", f"{df.shape[1]:,}")
+        with col3:
+            numeric_cols = len(df.select_dtypes(include=[np.number]).columns)
+            st.metric("Numeric Columns", numeric_cols)
+        with col4:
+            missing_vals = df.isnull().sum().sum()
+            st.metric("Missing Values", missing_vals)
+        
+        # Style the metric cards
+        style_metric_cards()
+
+def create_plotly_chart(df, x_col, y_col, chart_type="scatter"):
+    """Create interactive Plotly charts"""
+    try:
+        if chart_type == "scatter":
+            fig = px.scatter(df, x=x_col, y=y_col, title=f"{y_col} vs {x_col}",
+                           hover_data=df.columns.tolist())
+        elif chart_type == "line":
+            fig = px.line(df, x=x_col, y=y_col, title=f"{y_col} over {x_col}")
+        elif chart_type == "bar":
+            fig = px.bar(df, x=x_col, y=y_col, title=f"{y_col} by {x_col}")
+        elif chart_type == "histogram":
+            fig = px.histogram(df, x=x_col, title=f"Distribution of {x_col}")
+        elif chart_type == "box":
+            fig = px.box(df, x=x_col, y=y_col, title=f"{y_col} by {x_col}")
+        elif chart_type == "violin":
+            fig = px.violin(df, x=x_col, y=y_col, title=f"{y_col} by {x_col}")
+        
+        fig.update_layout(template="plotly_white")
+        return fig
+    except Exception as e:
+        st.error(f"Plotly chart error: {str(e)}")
+        return None
+
+def create_pygwalker_interface(df):
+    """Create Tableau-like drag & drop interface"""
+    try:
+        st.subheader("🧩 PyGWalker - Drag & Drop Analysis")
+        st.info("Interactive Tableau-like interface. Drag variables to create visualizations!")
+        pyg_html = pyg.walk(df, return_html=True)
+        st.components.v1.html(pyg_html, height=1000, scrolling=True)
+    except Exception as e:
+        st.error(f"PyGWalker error: {str(e)}")
 
 # ---------------------------
 # DATA CLEANING & UTILITIES
@@ -402,24 +496,58 @@ else:
 # MAIN APP LAYOUT
 # ---------------------------
 st.title("📊 Data Insight Assistant Pro")
-st.markdown("**Academic & Enterprise Edition** - Statistical analysis, AI research assistance, and publication-ready outputs")
+st.markdown("**Academic & Enterprise Edition** - Advanced statistical analysis, AI research assistance, and publication-ready outputs")
 
-# Enhanced tabs
-tabs = st.tabs(["Upload & Clean", "AI Insights", "Statistical Analysis", "Visualization", "Forecast", "Chat", "Notes & PDF"])
-tab_upload, tab_ai, tab_stats, tab_viz, tab_forecast, tab_chat, tab_notes = tabs
+# Setup enhanced UI
+setup_enhanced_ui()
+
+# Enhanced navigation with option menu
+with st.sidebar:
+    selected = option_menu(
+        menu_title="Main Menu",
+        options=["Upload & Clean", "AI Insights", "Statistical Analysis", "Visualization", "PyGWalker", "Forecast", "Chat", "Notes & PDF"],
+        icons=["📁", "🧠", "🔬", "📊", "🧩", "📈", "💬", "📝"],
+        default_index=0,
+        styles={
+            "container": {"padding": "5px"},
+            "icon": {"color": "orange", "font-size": "18px"}, 
+            "nav-link": {"font-size": "16px", "text-align": "left", "margin":"0px"},
+            "nav-link-selected": {"background-color": "#1f77b4"},
+        }
+    )
+
+# Enhanced tabs based on menu selection
+if selected == "Upload & Clean":
+    tab_upload = st.container()
+elif selected == "AI Insights":
+    tab_ai = st.container()
+elif selected == "Statistical Analysis":
+    tab_stats = st.container()
+elif selected == "Visualization":
+    tab_viz = st.container()
+elif selected == "PyGWalker":
+    tab_pyg = st.container()
+elif selected == "Forecast":
+    tab_forecast = st.container()
+elif selected == "Chat":
+    tab_chat = st.container()
+elif selected == "Notes & PDF":
+    tab_notes = st.container()
+
+# Map to existing tab variables for compatibility
+tab_upload = tab_upload if 'tab_upload' in locals() else st.container()
+tab_ai = tab_ai if 'tab_ai' in locals() else st.container()
+tab_stats = tab_stats if 'tab_stats' in locals() else st.container()
+tab_viz = tab_viz if 'tab_viz' in locals() else st.container()
+tab_forecast = tab_forecast if 'tab_forecast' in locals() else st.container()
+tab_chat = tab_chat if 'tab_chat' in locals() else st.container()
+tab_notes = tab_notes if 'tab_notes' in locals() else st.container()
 
 # ---------------------------
 # TAB 1: UPLOAD & CLEAN
 # ---------------------------
 with tab_upload:
     st.header("📁 Data Upload & Automated Cleaning")
-    
-    # Role selector
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("👤 Role Settings")
-    demo_role = st.sidebar.selectbox("Select Role", list(USER_ROLES.keys()), index=1)
-    st.session_state.user_role = demo_role
-    st.sidebar.info(f"**Role:** {st.session_state.user_role}")
     
     uploaded_file = st.file_uploader("Upload CSV or Excel file", type=["csv", "xlsx", "xls"])
     
@@ -444,6 +572,10 @@ with tab_upload:
             st.session_state["schema"] = schema
             
             st.success(f"✅ Loaded `{uploaded_file.name}` — Shape: {df_clean.shape}")
+            
+            # 👇 METRIC CARDS ADDED HERE
+            st.subheader("📈 Dataset Overview")
+            create_metric_cards(st.session_state["df"])
             
             # Display results
             col1, col2 = st.columns(2)
@@ -472,7 +604,6 @@ with tab_upload:
             st.error(f"Failed to process file: {str(e)}")
     else:
         st.info("👆 Upload a CSV or Excel file to begin analysis")
-
 # ---------------------------
 # TAB 2: AI INSIGHTS
 # ---------------------------
@@ -708,6 +839,38 @@ with tab_viz:
                                 mime="image/png"
                             )
 
+        # Interactive Plotly Charts Section
+        st.markdown("---")
+        st.subheader("🔄 Interactive Plotly Charts")
+
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            plotly_x = st.selectbox("X Axis", df.columns, key="plotly_x")
+        with col2:
+            plotly_y = st.selectbox("Y Axis", numeric_cols, key="plotly_y")
+        
+        plotly_chart_type = st.selectbox("Chart Type", 
+                            ["scatter", "line", "bar", "histogram", "box", "violin"],
+                            key="plotly_type")
+        
+        if st.button("Create Interactive Chart"):
+            fig = create_plotly_chart(df, plotly_x, plotly_y, plotly_chart_type)
+            if fig:
+                st.plotly_chart(fig, use_container_width=True)
+# ---------------------------
+# NEW TAB: PyGWalker
+# ---------------------------
+with tab_pyg:
+    st.header("🧩 PyGWalker - Drag & Drop Analysis")
+    
+    if "df" not in st.session_state:
+        st.warning("Upload data in the Upload & Clean tab first.")
+    else:
+        df = st.session_state["df"]
+        create_pygwalker_interface(df)
 # ---------------------------
 # TAB 5: FORECAST
 # ---------------------------
